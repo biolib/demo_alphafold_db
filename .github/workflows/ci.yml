@@ -1,0 +1,44 @@
+name: CI
+
+on: push
+
+env:
+    BIOLIB_LOG: debug
+    BIOLIB_PROJECT_URI: Alphafold/demo_alphafold_db
+    LOCAL_DOCKER_TAG: af_db:latest
+
+jobs:
+    build-and-publish:
+        name: Build Docker image and publish if on main
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v2
+                with:
+                    fetch-depth: 2
+
+            -   name: Get changed files
+                id: get_files
+                run: |
+                    echo -n "::set-output name=files::$(git diff-tree --no-commit-id --name-only -r ${{ github.sha }} | xargs)"
+
+            -   name: Echo changed files
+                run: |
+                    echo ${{ steps.get_files.outputs.files }}
+
+            -   name: Build docker image
+                run: docker build -t $LOCAL_DOCKER_TAG .
+
+            -   name: Setup Python
+                uses: actions/setup-python@v2
+                with:
+                    python-version: 3.8.6
+
+            -   name: Install BioLib CLI
+                run: pip3 install pybiolib
+
+            -   name: Publish new version to BioLib if on main branch
+                if: ${{ github.ref == 'refs/heads/main' }}
+                run: biolib push $BIOLIB_PROJECT_URI
+                env:
+                    BIOLIB_TOKEN: ${{ secrets.BIOLIB_TOKEN }}

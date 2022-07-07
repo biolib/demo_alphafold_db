@@ -1,0 +1,15 @@
+biolib_version: 2
+modules:
+    main:
+        image: 'local-docker://af_db:latest'
+        command: './run.sh'
+        working_directory: /home/biolib/
+        input_files:
+            - COPY / /home/biolib/
+        output_files:
+            - COPY /home/biolib/ /
+        large_file_systems:
+            -
+                id: 6750a523-b352-4d42-a8e6-e7d9a94536f8
+                target_path: /alphafold_db/
+main_output_file: /output.md
